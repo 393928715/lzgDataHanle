@@ -28,7 +28,7 @@ class fileHandle():
         
         self.rootdir=os.path.dirname(os.getcwdu())+'\\Data\\History\\Stock\\股票历史数据\\'
 
-        self.engine = create_engine('mysql://root:lzg000@127.0.0.1/lzg?charset=utf8')
+        self.engine = create_engine('mysql://root:lzg000@127.0.0.1/stocksystem?charset=utf8')
         
         self.tickdir=os.path.dirname(os.getcwdu())+'\\Data\\History\\Stock\\股票tick数据'
         
@@ -39,6 +39,15 @@ class fileHandle():
         self.tdxstock5min=u'E:\\股票数据\\股票5min\\'
         
         self.tdxindex5min=u'E:\\股票数据\\板块5min\\'
+        
+        conn=pymysql.connect(host='localhost',
+                user='root',
+                passwd='lzg000',
+                db='stocksystem',
+                port=3306,
+                charset='utf8'
+                )    
+        self.cursor=conn.cursor()        
         
         
     #补齐1分钟数据   
@@ -290,20 +299,27 @@ class fileHandle():
             num+=1
             print num
                     
-    def tdxFileLoading(self,linetype,indexflag,mintype=5):
+    def tdxFileLoading(self,linetype,indexflag,cursor,mintype=5):
+        
         if linetype=='D' or linetype=='d':
             
             if indexflag==0:
                 jysjpth=jysjpth=self.tdxstockd
                 names=['hq_date','hq_open','hq_high','hq_low','hq_close','hq_vol','hq_amo']
                 table='hstockquotationday'
+                truncatesql='truncate table '+table
+                cursor.execute(truncatesql) 
+                print truncatesql
                 #table='stockday'
             else:
                 jysjpth=self.tdxindexd
                 table='hindexquotationday'
                 names=['hq_date','hq_open','hq_high','hq_low','hq_close','hq_vol','hq_amo']
+                truncatesql='truncate table '+table
+                cursor.execute(truncatesql) 
+                print truncatesql
                 
-            engine = create_engine(r"mysql+mysqldb://root:lzg000@127.0.0.1/stocksystem?charset=utf8")
+            engine =self.engine
             
             i=0
             s2=pd.DataFrame()
@@ -326,7 +342,10 @@ class fileHandle():
 #                    name=codename[1]
                 code=f[:-4]
                 fin.close()    
-                s1=pd.read_table(filename,header=1,usecols=[0,1,2,3,4,5,6],names=names,dtype={'hq_time':str,'hq_close':np.float,'hq_open':np.float,'hq_high':np.float,'hq_low':np.float,'hq_vol':np.float,'hq_amo':np.float}) 
+                try:
+                    s1=pd.read_table(filename,header=1,usecols=[0,1,2,3,4,5,6],names=names,dtype={'hq_time':str,'hq_close':np.float,'hq_open':np.float,'hq_high':np.float,'hq_low':np.float,'hq_vol':np.float,'hq_amo':np.float},encoding='utf-8')
+                except:
+                    s1=pd.read_table(filename,header=1,usecols=[0,1,2,3,4,5,6],names=names,dtype={'hq_time':str,'hq_close':np.float,'hq_open':np.float,'hq_high':np.float,'hq_low':np.float,'hq_vol':np.float,'hq_amo':np.float},encoding='gbk')
                 s1=s1.iloc[:-1] 
                 #s1["hq_date"]=s1["hq_date"].apply(lambda x: x.strip().replace('/',''))
                 s1['hq_code']=code
@@ -355,19 +374,33 @@ class fileHandle():
                     table='hstockquotationone'
                     jysjpth=u'E:\\股票数据\\股票1min\\'
                     indexName='1分钟线'
+                    truncatesql='truncate table '+table
+                    cursor.execute(truncatesql) 
+                    print truncatesql
+                    
                 elif mintype==5:  
                     table='hstockquotationfive'
                     jysjpth=u'E:\\股票数据\\股票5min\\'
-                    indexName='5分钟线'        
+                    indexName='5分钟线' 
+                    truncatesql='truncate table '+table
+                    cursor.execute(truncatesql) 
+                    print truncatesql                    
             else:
                 if mintype==1:
                     table='hindexquotationone'
                     jysjpth=u'E:\\股票数据\\板块1min\\'
-                    indexName='1分钟线'        
+                    indexName='1分钟线'    
+                    truncatesql='truncate table '+table
+                    cursor.execute(truncatesql) 
+                    print truncatesql 
+                    
                 elif mintype==5:
                     table='hindexquotationfive'
                     jysjpth=u'E:\\股票数据\\板块5min\\'
                     indexName='5分钟线'        
+                    truncatesql='truncate table '+table
+                    cursor.execute(truncatesql) 
+                    print truncatesql 
                     
             engine = create_engine(r"mysql+mysqldb://root:lzg000@127.0.0.1/stocksystem?charset=utf8")
             i=0
@@ -423,9 +456,9 @@ class fileHandle():
     #把tick数据转换成各种级别数据入库
     def ticktomin(self):
         s=StockHandle()
-#        dirlist=s.getAllStockPath(s.sdata_hqpath)
-#        s.StockTickHandle(dirlist,self.engine)
-#        self.fill1min()
+        dirlist=s.getAllStockPath(s.sdata_hqpath)
+        s.StockTickHandle(dirlist,self.engine)
+        self.fill1min()
         self.loading1min()
         self.group1min()
 
@@ -445,41 +478,29 @@ class fileHandle():
             print n
     
     #处理通达信数据入库,并生成报表
-    def tdxDataloading(self,sdate,edate):
-        conn=pymysql.connect(host='localhost',
-                user='root',
-                passwd='lzg000',
-                db='stocksystem',
-                port=3306,
-                charset='utf8'
-                )    
-        cursor=conn.cursor()
-        cursor.execute('truncate table hstockquotationday;truncate table hstockquotationfive;truncate table hindexquotationday;truncate table hindexquotationfive') 
+    def tdxDataloading(self):
+        #cursor.execute('truncate table hstockquotationday;truncate table hstockquotationfive;truncate table hindexquotationday;truncate table hindexquotationfive') 
         
-        self.engine = create_engine('mysql://root:lzg000@127.0.0.1/stocksystem?charset=utf8')
+#        self.convertToUtf8(self.tdxstockd)
+#        self.convertToUtf8(self.tdxstock5min)
+#        self.convertToUtf8(self.tdxindexd)
+#        self.convertToUtf8(self.tdxindex5min)
         
         
-        self.convertToUtf8(self.tdxstockd)
-        self.convertToUtf8(self.tdxstock5min)
-        self.convertToUtf8(self.tdxindexd)
-        self.convertToUtf8(self.tdxindex5min)
-        
-        
-        self.tdxFileLoading('d',0)
-        print '股票日线入库完成'
-        self.tdxFileLoading('d',1)   
+        self.tdxFileLoading('d',0,cursor=self.cursor)
+        print '股票日线入库完成'  
+        self.tdxFileLoading('m',0,cursor=self.cursor)        
         print '股票5min线入库完成'
-        self.tdxFileLoading('m',0)
+        self.tdxFileLoading('d',1,cursor=self.cursor)
         print '行业日线入库完成'
-        self.tdxFileLoading('m',1)
+        self.tdxFileLoading('m',1,cursor=self.cursor)
         print '行业5min入库完成'
         
-        z=ZH(sdate,edate)
-        z.buildForms()
-        
+
 if __name__=='__main__':
     
-#    c=fileHandle()
-#    c.tdxDataloading()
-
+    c=fileHandle()
+    c.tdxDataloading()
+    z=ZH('2017-07-14','2017-7-17')
+    z.buildForms()
 

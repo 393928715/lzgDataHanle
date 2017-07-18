@@ -279,12 +279,8 @@ class MktStockHandle:
     #获取指定时间所有股票
         
     def MkStockOneDayGet(self,sDate):
-        
-        sDate = sDate.strftime( '%Y-%m-%d' )
-        
-        sTime = '00:00:00'
-        
-        strstart = ' UNIX_TIMESTAMP(\''+sDate +' ' + sTime+'\')'
+             
+        strstart = ' \''+sDate +'\''
         
         sgb_engine = self.engine
         
@@ -304,24 +300,24 @@ class MktStockHandle:
             securityID='>=000001'
             
         
-        sDate = sDate.strftime( '%Y-%m-%d' )
+#        sDate = sDate.strftime( '%Y-%m-%d' )
+#        
+#        sEndDate = sEndDate.strftime( '%Y-%m-%d' )
         
-        sEndDate = sEndDate.strftime( '%Y-%m-%d' )
-        
-        sTime_Start = '00:00:00'
-        
-        sTime_End   = '15:00:00'
+#        sTime_Start = '00:00:00'
+#        
+#        sTime_End   = '15:00:00'
             
-        strstart = ' UNIX_TIMESTAMP(\''+sDate +' ' + sTime_Start+'\')'
+        strstart = ' \''+sDate +'\''
         
-        strend = 'UNIX_TIMESTAMP(\''+sEndDate +' '+sTime_End+'\')'
+        strend = '\''+sEndDate +'\''
         
         if securityID=="":
             mkquerysql = "select * from stockday as hiq where "
         else:
             mkquerysql = "select * from hstockquotationday as hiq where hiq.hq_code " + securityID + " and "
                   
-        strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+        strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend 
        
         mkquerysql = mkquerysql + strsql
        
@@ -339,25 +335,20 @@ class MktStockHandle:
         
         t1=time.time()
         
-        sDate_Start = sDate_Start.strftime( '%Y-%m-%d' )
+#        sDate_Start = sDate_Start.strftime( '%Y-%m-%d  %H:%M' )
+#        
+#        sDate_End = sDate_End.strftime( '%Y-%m-%d  %H:%M' )        
+             
+        strstart = ' \''+sDate_Start+'\''
         
-        sDate_End = sDate_End.strftime( '%Y-%m-%d' )        
-        
-        
-        sTime_Start = '00:00:00'
-        
-        sTime_End   = '15:00:00'
-            
-        strstart = ' UNIX_TIMESTAMP(\''+sDate_Start +' ' + sTime_Start+'\')'
-        
-        strend = 'UNIX_TIMESTAMP(\''+sDate_End +' '+sTime_End+'\')'
+        strend = '\''+sDate_End+'\''
         
         # 处理1分钟数据       
         if speriod=="1M":
             
-           mkquerysql = "select * from stock1min as hiq where hiq.hq_code " + securityID + " and "
+           mkquerysql = "select * from hstockquotationone as hiq where hiq.hq_code " + securityID + " and "
                                        
-           strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -368,7 +359,7 @@ class MktStockHandle:
             
            mkquerysql = "select * from hstockquotationfive as hiq where hiq.hq_code " + securityID + " and "
                                        
-           strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend  
+           strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend  
            
            mkquerysql = mkquerysql + strsql
            
@@ -379,7 +370,7 @@ class MktStockHandle:
             
            mkquerysql = "select * from hstockquotationfive as hiq where hiq.hq_code " + securityID + " and "
                                        
-           strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -390,7 +381,7 @@ class MktStockHandle:
             
            mkquerysql = "select * from hstockquotationthirty as hiq where hiq.hq_code " + securityID + " and "
                                        
-           strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend
+           strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend
            
            mkquerysql = mkquerysql + strsql
            
@@ -400,7 +391,7 @@ class MktStockHandle:
             
            mkquerysql = "select * from hstockquotationsixty as hiq where hiq.hq_code " + securityID + " and "
                                        
-           strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend  
+           strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend  
            
            mkquerysql = mkquerysql + strsql
            
@@ -414,7 +405,7 @@ class MktStockHandle:
             else:
                 mkquerysql = "select * from hstockquotationday as hiq where hiq.hq_code " + securityID + " and "
                       
-            strsql = " UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+            strsql = " hiq.index>="+strstart +" and hiq.index<=" +strend 
            
             mkquerysql = mkquerysql + strsql
            
@@ -586,21 +577,18 @@ class MktIndexHandle:
        
     def MktIndexBarHistOneDayGet(self,securityID,sDate,sEndDate):
         
-        sDate = sDate.strftime( '%Y-%m-%d' )
+#        sDate = sDate.strftime( '%Y-%m-%d' )
+#        
+#        sEndDate= sEndDate.strftime( '%Y-%m-%d' )
         
-        sEndDate= sEndDate.strftime( '%Y-%m-%d' )
-        
-        sTime_Start = '00:00:00'
-        
-        sTime_End   = '15:00:00'
             
-        strstart = ' UNIX_TIMESTAMP(\''+sDate +' ' + sTime_Start+'\')'
+        strstart = ' \''+sDate +'\''
         
-        strend = 'UNIX_TIMESTAMP(\''+sEndDate +' '+sTime_End+'\')'
+        strend = '\''+sEndDate +'\''
         
         mkquerysql = "select * from hindexquotationday as hiq where hiq.hq_code =" + securityID
                   
-        strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+        strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
        
         mkquerysql = mkquerysql + strsql
        
@@ -616,18 +604,12 @@ class MktIndexHandle:
     # 统一获取股票历史交易数据接口
     def MktIndexBarHistDataGet(self,securityID,sDate_Start,sDate_End,speriod,sTime_Start='00:00:00',sTime_End='15:00:00'):
         
-        sDate_Start= sDate_Start.strftime( '%Y-%m-%d' )
-        sDate_End = sDate_End.strftime( '%Y-%m-%d' )  
-        
-        if sTime_Start=='':
-            sTime_Start = '00:00:00'
-        
-        if sTime_End=='':
-            sTime_End = '15:00:00'
+#        sDate_Start= sDate_Start.strftime( '%Y-%m-%d' )
+#        sDate_End = sDate_End.strftime( '%Y-%m-%d' )         
             
-        strstart = ' UNIX_TIMESTAMP(\''+sDate_Start +' ' + sTime_Start+'\')'
+        strstart = ' (\''+sDate_Start +'\')'
         
-        strend = 'UNIX_TIMESTAMP(\''+sDate_End +' '+sTime_End+'\')'
+        strend = '(\''+sDate_End +'\')'
         
         
         # 处理1分钟数据       
@@ -635,7 +617,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hindexquotationone as hiq where hiq.hq_code " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -646,7 +628,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hindexquotationfive as hiq where hiq.hq_code " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
          
@@ -655,7 +637,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hindexquotationfifteen as hiq where hiq.hq_code " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -664,7 +646,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hindexquotationthirty as hiq where hiq.hq_code " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -675,7 +657,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hindexquotationsixty as hiq where hiq.hq_code " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            print mkquerysql
@@ -685,7 +667,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hindexquotationday as hiq where hiq.hq_code " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            print mkquerysql
@@ -701,19 +683,14 @@ class MktIndexHandle:
     # 统一获取规模指数历史交易数据接口
     def MktScaleIndexBarHistDataGet(self,securityID,sDate_Start,sDate_End,speriod,sTime_Start='00:00:00',sTime_End='15:00:00'):
         
-        sDate_Start= sDate_Start.strftime( '%Y-%m-%d' )
+#        sDate_Start= sDate_Start.strftime( '%Y-%m-%d' )
+#        
+#        sDate_End = sDate_End.strftime( '%Y-%m-%d' )  
         
-        sDate_End = sDate_End.strftime( '%Y-%m-%d' )  
-        
-        if sTime_Start=='':
-            sTime_Start = '00:00:00'
-        
-        if sTime_End=='':
-            sTime_End = '15:00:00'
             
-        strstart = ' UNIX_TIMESTAMP(\''+sDate_Start +' ' + sTime_Start+'\')'
+        strstart = ' \''+sDate_Start +' ' + sTime_Start+'\''
         
-        strend = 'UNIX_TIMESTAMP(\''+sDate_End +' '+sTime_End+'\')'
+        strend = '\''+sDate_End +' '+sTime_End+'\''
         
         securityID = '('+ securityID+')'
         
@@ -722,7 +699,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hscaleindexquotationone as hiq where hiq.hq_code in " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -733,7 +710,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hscaleindexquotationfive as hiq where hiq.hq_code in " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
          
@@ -742,7 +719,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hscaleindexquotationfifteen as hiq where hiq.hq_code in " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -751,7 +728,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hscaleindexquotationthirty as hiq where hiq.hq_code in " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            
@@ -762,7 +739,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hscaleindexquotationsixty as hiq where hiq.hq_code in " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            print mkquerysql
@@ -772,7 +749,7 @@ class MktIndexHandle:
             
            mkquerysql = "select * from hscaleindexquotationday as hiq where hiq.hq_code in " + securityID
                       
-           strsql = " and UNIX_TIMESTAMP(hiq.index)>="+strstart +" and UNIX_TIMESTAMP(hiq.index)<=" +strend 
+           strsql = " and hiq.index>="+strstart +" and hiq.index<=" +strend 
            
            mkquerysql = mkquerysql + strsql
            print mkquerysql
