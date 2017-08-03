@@ -299,26 +299,26 @@ class fileHandle():
             num+=1
             print num
                     
-    def tdxFileLoading(self,linetype,indexflag,cursor,mintype=5):
+    def tdxFileLoading(self,linetype,indexflag,cursor,date,mintype=5,delete=False):
         
         if linetype=='D' or linetype=='d':
             
             if indexflag==0:
-                jysjpth=jysjpth=self.tdxstockd
+                jysjpth=self.tdxstockd
                 names=['hq_date','hq_open','hq_high','hq_low','hq_close','hq_vol','hq_amo']
-                table='hstockquotationday'
+                table='hstockquotationday'                
                 truncatesql='truncate table '+table
-                cursor.execute(truncatesql) 
-                print truncatesql
                 #table='stockday'
             else:
                 jysjpth=self.tdxindexd
                 table='hindexquotationday'
                 names=['hq_date','hq_open','hq_high','hq_low','hq_close','hq_vol','hq_amo']
                 truncatesql='truncate table '+table
+               
+            if delete==True:           
                 cursor.execute(truncatesql) 
                 print truncatesql
-                
+                    
             engine =self.engine
             
             i=0
@@ -346,7 +346,8 @@ class fileHandle():
                     s1=pd.read_table(filename,header=1,usecols=[0,1,2,3,4,5,6],names=names,dtype={'hq_time':str,'hq_close':np.float,'hq_open':np.float,'hq_high':np.float,'hq_low':np.float,'hq_vol':np.float,'hq_amo':np.float},encoding='utf-8')
                 except:
                     s1=pd.read_table(filename,header=1,usecols=[0,1,2,3,4,5,6],names=names,dtype={'hq_time':str,'hq_close':np.float,'hq_open':np.float,'hq_high':np.float,'hq_low':np.float,'hq_vol':np.float,'hq_amo':np.float},encoding='gbk')
-                s1=s1.iloc[:-1] 
+                    
+                s1=s1[s1['hq_date']==date]
                 #s1["hq_date"]=s1["hq_date"].apply(lambda x: x.strip().replace('/',''))
                 s1['hq_code']=code
                 i+=1
@@ -375,33 +376,29 @@ class fileHandle():
                     jysjpth=u'E:\\股票数据\\股票1min\\'
                     indexName='1分钟线'
                     truncatesql='truncate table '+table
-                    cursor.execute(truncatesql) 
-                    print truncatesql
                     
                 elif mintype==5:  
                     table='hstockquotationfive'
                     jysjpth=u'E:\\股票数据\\股票5min\\'
                     indexName='5分钟线' 
                     truncatesql='truncate table '+table
-                    cursor.execute(truncatesql) 
-                    print truncatesql                    
+                 
             else:
                 if mintype==1:
                     table='hindexquotationone'
                     jysjpth=u'E:\\股票数据\\板块1min\\'
                     indexName='1分钟线'    
                     truncatesql='truncate table '+table
-                    cursor.execute(truncatesql) 
-                    print truncatesql 
                     
                 elif mintype==5:
                     table='hindexquotationfive'
                     jysjpth=u'E:\\股票数据\\板块5min\\'
                     indexName='5分钟线'        
                     truncatesql='truncate table '+table
-                    cursor.execute(truncatesql) 
-                    print truncatesql 
-                    
+                   
+            if delete==True:           
+                cursor.execute(truncatesql) 
+                print truncatesql        
             engine = create_engine(r"mysql+mysqldb://root:lzg000@127.0.0.1/stocksystem?charset=utf8")
             i=0
             s2=pd.DataFrame()
@@ -424,7 +421,8 @@ class fileHandle():
                 fin.close()
                 names=['hq_date','hq_time','hq_close','hq_vol','hq_amo']
                 s1=pd.read_table(filename,header=1,usecols=[0,1,5,6,7],names=names,dtype={'hq_date':np.str,'hq_time':np.str,'hq_close':np.float,'hq_vol':np.float,'hq_amo':np.float}) 
-                s1=s1.iloc[:-1] 
+                s1=s1[s1['hq_date']==date]
+                #s1=s1.iloc[:-1] 
                 #s1["hq_date"]=s1["hq_date"].apply(lambda x: x.strip().replace('/',''))
                 s1['hq_code']=code
                 #s1['hq_name']=name
@@ -478,29 +476,29 @@ class fileHandle():
             print n
     
     #处理通达信数据入库,并生成报表
-    def tdxDataloading(self):
+    def tdxDataloading(self,delete,date):
         #cursor.execute('truncate table hstockquotationday;truncate table hstockquotationfive;truncate table hindexquotationday;truncate table hindexquotationfive') 
         
 #        self.convertToUtf8(self.tdxstockd)
 #        self.convertToUtf8(self.tdxstock5min)
 #        self.convertToUtf8(self.tdxindexd)
 #        self.convertToUtf8(self.tdxindex5min)
-        
-        
-        self.tdxFileLoading('d',0,cursor=self.cursor)
+        self.tdxFileLoading('d',0,cursor=self.cursor,delete=delete,date=date)
         print '股票日线入库完成'  
-        self.tdxFileLoading('m',0,cursor=self.cursor)        
+        self.tdxFileLoading('m',0,cursor=self.cursor,delete=delete,date=date)        
         print '股票5min线入库完成'
-        self.tdxFileLoading('d',1,cursor=self.cursor)
+        self.tdxFileLoading('d',1,cursor=self.cursor,delete=delete,date=date)
         print '行业日线入库完成'
-        self.tdxFileLoading('m',1,cursor=self.cursor)
+        self.tdxFileLoading('m',1,cursor=self.cursor,delete=delete,date=date)
         print '行业5min入库完成'
         
 
 if __name__=='__main__':
     
     c=fileHandle()
-    c.tdxDataloading()
-    z=ZH('2017-07-14','2017-7-17')
+   # c.tdxFileLoading('m',0,cursor=c.cursor,mintype=1)
+    #c.tdxFileLoading('m',1,cursor=c.cursor,date='2017/07/31')
+    c.tdxDataloading(delete=False,date='2017-08-03')
+    z=ZH('2017-07-28','2017-08-03')
     z.buildForms()
-
+    #z.buildJzRankForm(update=True,rankFlag=1,allFlag=0)
