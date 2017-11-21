@@ -386,6 +386,7 @@ class MktStockHandle:
            mkquerysql = mkquerysql + strsql
            
            print mkquerysql
+           
         # 处理60分钟数据       
         if speriod=="60M":
             
