@@ -28,7 +28,7 @@ class fileHandle():
         
         #self.tdir=os.path.dirname(os.getcwdu())+'\\Data\\History\\Stock\\股票历史数据\\补全数据1min\\'
         
-        self.tdir=u'E:\\work\\股票数据\\股票1min\\'#股票1min
+        self.tdir=u'E:\\work\\股票数据\\股票5min\\'#股票1min
         
         self.rootdir=os.path.dirname(os.getcwdu())+'\\Data\\History\\Stock\\股票历史数据\\'
 
@@ -125,37 +125,36 @@ class fileHandle():
         return y           
            
            
-    def group1min(self,s1,week):
+    def groupmin(self,s1,week):
         
-        if week==True:
-            
-            sweek=s1.resample('W-FRI').apply(self.ohlc_dict2)
-            
-            sweek.dropna(axis=0,inplace=True)       
-            
-            return sweek
-            
-        else:  
         
-    #        s5=s1.resample('5T', label='right',closed='right').apply(self.ohlc_dict)          
-    #        s5=s5.dropna(axis=0).drop(s5[s5.hq_time=='13:00'].index)    
-            
-            s15=s1.resample('15T', label='right',closed='right').apply(self.ohlc_dict) 
-            s15=s15.dropna(axis=0).drop(s15[s15.hq_time=='13:00'].index)
-            
-            s30=s1.resample('30T', label='right',closed='right').apply(self.ohlc_dict) 
-            s30=s30.dropna(axis=0).drop(s30[s30.hq_time=='13:00'].index)
-                    
-            s60=s30.groupby('hq_date').apply(self.cl30)
-            del s60['hq_date']
-            s60.reset_index(level=0,inplace=True)
+#        s5=s1.resample('5T', label='right',closed='right').apply(self.ohlc_dict)          
+#        s5=s5.dropna(axis=0).drop(s5[s5.hq_time=='13:00'].index)    
+        
+        s15=s1.resample('15T', label='right',closed='right').apply(self.ohlc_dict) 
+        s15=s15.dropna(axis=0).drop(s15[s15.hq_time=='13:00'].index)
+        
+        s30=s1.resample('30T', label='right',closed='right').apply(self.ohlc_dict) 
+        s30=s30.dropna(axis=0).drop(s30[s30.hq_time=='13:00'].index)
+                
+        s60=s30.groupby('hq_date').apply(self.cl30)
+        #del s60['hq_date']
+        s60.reset_index(level=0,inplace=True,drop=True)
 
-    #        sday=s1.resample('D', label='left',closed='right').apply(self.ohlc_dict2) 
-    #        sday.dropna(axis=0,inplace=True)
+#        sday=s1.resample('D', label='left',closed='right').apply(self.ohlc_dict2) 
+#        sday.dropna(axis=0,inplace=True)
+
+        return s15,s30,s60
     
-            return s15,s30,s60
-
-    #聚合1分钟数据，生成CSV,入库        
+    def group_week(self,s1):
+        
+        sweek=s1.resample('W-FRI').apply(self.ohlc_dict2)
+        
+        sweek.dropna(axis=0,inplace=True)       
+        
+        return sweek        
+        
+    #聚合5分钟数据，生成CSV,入库        
     def groupFile(self,date='',week=False):
  
 
@@ -171,12 +170,12 @@ class fileHandle():
         n=0
         for f in flist:
             
-            if 'S' in f:
+#            if 'S' in f:
+#                
+#                code = filter(lambda x:x not in '#SZH',f)[:-4]
+#            else:  
                 
-                code = filter(lambda x:x not in '#SZH',f)[:-4]
-            else:  
-                
-                code=f[:-4]
+            code=f[:-4]
                 
             fname=os.path.join(self.tdir,f)    
                              
@@ -207,19 +206,34 @@ class fileHandle():
                     
                     
             if len(date)>2:
-                s1=s1[s1.hq_date==date]
+                s1=s1[s1.hq_date>=date]
             
-            if len(s1)>239:
-                try:
-                    if week==True:
-                        sweek=self.group1min(s1,week)
-                    else:
-                        s15,s30,s60=self.group1min(s1,week)
-                           
-                except:
-                    self.errortxt.write(code+'数据有误\n')
+            if len(s1)<48:
+                
+                print code+' 数据长度不足'
+                
+                continue
+            
 
-                f=f.replace('.txt','.csv')
+            if week==True:           
+                try:
+                    sweek=self.group_week(s1)
+                except:
+                    self.errortxt.write(code+'数据有误\n')    
+                
+                sweek.to_sql('hstockquotationweek',self.engine,if_exists='append')
+                    
+            else:               
+                try:
+                    s15,s30,s60=self.groupmin(s1)              
+                except:
+                   self.errortxt.write(code+'数据有误\n')
+                
+                s15.to_sql('hstcokquotationfifteen',self.engine,if_exists='append') 
+                s30.to_sql('hstockquotationthirty',self.engine,if_exists='append') 
+                s60.to_sql('hstockquotationsixty',self.engine,if_exists='append')
+
+            f=f.replace('.txt','.csv')
 #            if n==0:                           
 #                s5.to_csv(self.rootdir+'5min\\'+f,mode='w')
 #                s15.to_csv(self.rootdir+'15min\\'+f,mode='w')
@@ -235,28 +249,25 @@ class fileHandle():
 #                sweek.to_csv(self.rootdir+'week\\'+f,mode='a',header=False)     
 
 
-                if week==True:
-                    
-                    sweek.to_sql('hstockquotationweek',self.engine,if_exists='append') 
-                
-                else:         
-                    s1.to_sql('hstcokquotationone',self.engine,if_exists='append')
-    ##                #s5.to_sql('hstockquotationfive',self.engine,if_exists='append') 
-                    s15.to_sql('hstcokquotationfifteen',self.engine,if_exists='append') 
-                    s60.to_sql('hstockquotationsixty',self.engine,if_exists='append')  
-                    #sday.to_sql('hstockquotationday',self.engine,if_exists='append') 
-                
-
-                 
-               
-                n+=1
-            
-                print str(n)+' '+code
+#            if week==True:
+#                
+#                sweek.to_sql('hstockquotationweek',self.engine,if_exists='append') 
+#            
+#            else:         
+#                #s1.to_sql('hstcokquotationone',self.engine,if_exists='append')
+###                #s5.to_sql('hstockquotationfive',self.engine,if_exists='append') 
+#                s15.to_sql('hstcokquotationfifteen',self.engine,if_exists='append') 
+#                s30.to_sql('hstockquotationthirty',self.engine,if_exists='append') 
+#                s60.to_sql('hstockquotationsixty',self.engine,if_exists='append')  
+                #sday.to_sql('hstockquotationday',self.engine,if_exists='append') 
+#                     
+            n+=1
+        
+            print str(n)+' '+code
             
         self.errortxt.close()
 
-
-            
+        
     #对1分钟数据进行入库，入库目录为补全数据1min
     def loading1min(self):
         i=0
@@ -324,7 +335,6 @@ class fileHandle():
             for d in dlist:
                 ddir=os.path.join(mdir,d)
                 ddirlist.append(ddir)
-       
        
         #找到日期目录
         num=0
@@ -628,12 +638,12 @@ class fileHandle():
         print '股票日线入库完成'  
         self.tdxFileLoading('m',0,cursor=self.conn.cursor(),delete=delete,date=date)        
         print '股票5min线入库完成'
-        self.tdxFileLoading('d',1,cursor=self.conn.cursor(),delete=True,date=date)
+        self.tdxFileLoading('d',1,cursor=self.conn.cursor(),delete=delete,date=date)
         print '行业日线入库完成'
         self.tdxFileLoading('m',1,cursor=self.conn.cursor(),delete=delete,date=date)
         print '行业5min入库完成'
-        
-
+       
+       
 if __name__=='__main__':
     
     c=fileHandle()
@@ -643,12 +653,12 @@ if __name__=='__main__':
     #cursor=c.conn.cursor()
     
     #c.tdxFileLoading('w',1,cursor=c.cursor,delete=True)
-    sdate='2017-11-17'
-    edate='2017-11-20' 
+    sdate='2017-12-29'
+    edate='2018-01-02' 
     
-    #c.groupFile(date='2017-09-26')
+    c.groupFile(date='2017-12-29')
     
-    c.tdxDataloading(edate,delete=False)
-    #c.tdxFileLoading('d',1,cursor=c.conn.cursor(),delete=True,date=edate)
-    z=ZH(sdate,edate)
-    z.buildForms()
+#    c.tdxDataloading(edate,delete=False)
+#    #c.tdxFileLoading('d',1,cursor=c.conn.cursor(),delete=True,date=edate)
+#    z=ZH(sdate,edate)
+#    z.buildForms()
